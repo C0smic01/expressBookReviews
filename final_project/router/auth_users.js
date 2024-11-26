@@ -1,92 +1,104 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
 let books = require("./booksdb.js");
-const regd_users = express.Router();
-const JWT_SECRET = "secret";
+let isValid = require("./auth_users.js").isValid;
+let users = require("./auth_users.js").users;
+const public_users = express.Router();
 
-let users = [];
+public_users.post("/register", async (req, res) => {
+    const findUser = (username) => {
+        return users.find(user => user.username === username);
+    };
 
-const isValid = (username)=>{ //returns boolean
-    for (let i = 0; i < users.length; i++)
-    {
-        if (users[i].username === username)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-const authenticatedUser = (username,password)=>{ //returns boolean
-    for (let i = 0; i < users.length; i++)
-    {
-        if (users[i].username === username && users[i].password === password)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-//only registered users can login
-regd_users.post("/login", (req,res) => {
-  //Write your code here
     try {
         const {username, password} = req.body;
-        if (!authenticatedUser(username, password))
-        {
-            return res.json({ message: "User is not registered!" });
+        const foundUser = findUser(username);
+        
+        if (foundUser) {
+            return res.json("Username existed");
         }
-        return res.json({token: jwt.sign({user: username}, JWT_SECRET)})
+        
+        users.push({"username": username, "password": password});
+        return res.json("User created");
     }
-    catch (error)
-    {
+    catch (error) {
         return res.status(500).json({ message: "Internal Server Error!!" });
     }
 });
 
-const checkAuthentication = (req, res) => {
-    let token = req.header('Authorization');
-    if (!token) {
-        return res.status(401).json({ message: "No token" });
-    }
-    if (token.startsWith('Bearer ')) {
-        tokenValue = token.slice(7, token.length).trimLeft();
-    }
-
-    try {
-        verificationStatus = jwt.verify(tokenValue, JWT_SECRET);
-        if (!isValid(verificationStatus.username)) {
-            return res.status(401).json({ message: "Please login" });
-        }
-    } catch (error) {
-        return res.status(401).json({ message: "Invalid token" });
-    }
-}
-
-// Add a book review
-regd_users.put("/auth/review/:isbn", (req, res) => {
-    checkAuthentication(req, res);
-
+public_users.get('/', async (req, res) => {
+    return res.json(books);
 });
 
-// Delete a book review
-regd_users.delete("/auth/review/:isbn", (req, res) => {
-    checkAuthentication(req, res);
-    let keys = Object.keys(books);
-    for (let i = 0; i < keys.length; i++)
-    {
-        let id = keys[i];
-        if (books[id].isbn === req.params.isbn)
-        {
-            books[id].reviews = {};
-            return res.status(200).json({message: "Review deleted successfully"});
-        }
-    }
-    return res.json({message: "No reviews found"});
+public_users.get('/isbn/:isbn', async (req, res) => {
+    const filter = (book_isbn) => {
+        let filtered_books = [];
+        let keys = Object.keys(books);  
 
+        for (let i = 0; i < keys.length; i++) {
+            let id = keys[i];
+            if (books[id].isbn === book_isbn) {
+                filtered_books.push(books[id]);
+            }
+        }
+        return filtered_books;
+    };
+
+    const filtered_books = filter(req.params.isbn);
+    return res.json(filtered_books);
+});
+  
+public_users.get('/author/:author', async (req, res) => {
+    const filter = (author) => {
+        let filtered_books = [];
+        let keys = Object.keys(books);  
+
+        for (let i = 0; i < keys.length; i++) {
+            let id = keys[i];
+            if (books[id].author === author) {
+                filtered_books.push(books[id]);
+            }
+        }
+        return filtered_books;
+    };
+
+    const filtered_books = filter(req.params.author);
+    return res.json(filtered_books);
 });
 
-module.exports.authenticated = regd_users;
-module.exports.isValid = isValid;
-module.exports.users = users;
+public_users.get('/title/:title', async (req, res) => {
+    const filter = (title) => {
+        let filtered_books = [];
+        let keys = Object.keys(books);  
+
+        for (let i = 0; i < keys.length; i++) {
+            let id = keys[i];
+            if (books[id].title === title) {
+                filtered_books.push(books[id]);
+            }
+        }
+        return filtered_books;
+    };
+
+    const filtered_books = filter(req.params.title);
+    return res.json(filtered_books);
+});
+
+public_users.get('/review/:isbn', async (req, res) => {
+    const filter = (isbn) => {
+        let reviews = [];
+        let keys = Object.keys(books);  
+
+        for (let i = 0; i < keys.length; i++) {
+            let id = keys[i];
+            if (books[id].isbn === isbn) {
+                reviews.push(books[id].reviews);
+            }
+        }
+        return reviews;
+    };
+
+    const reviews = filter(req.params.isbn);
+    return res.json(reviews);
+});
+
+module.exports.general = public_users;
