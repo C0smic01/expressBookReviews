@@ -66,12 +66,13 @@ const checkAuthentication = (req, res) => {
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-  return res.status(300).json({message: "Yet to be implemented"});
+    checkAuthentication(req, res);
+
 });
 
 // Delete a book review
 regd_users.delete("/auth/review/:isbn", (req, res) => {
-    // checkAuthentication(req, res);
+    checkAuthentication(req, res);
     let keys = Object.keys(books);
     for (let i = 0; i < keys.length; i++)
     {
@@ -79,7 +80,7 @@ regd_users.delete("/auth/review/:isbn", (req, res) => {
         if (books[id].isbn === req.params.isbn)
         {
             books[id].reviews = {};
-            return res.status(204).json({message: "Review deleted successfully"});
+            return res.status(200).json({message: "Review deleted successfully"});
         }
     }
     return res.json({message: "No reviews found"});
