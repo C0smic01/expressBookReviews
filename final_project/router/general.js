@@ -4,122 +4,101 @@ let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
 
+public_users.post("/register", async (req, res) => {
+    const findUser = (username) => {
+        return users.find(user => user.username === username);
+    };
 
-public_users.post("/register", (req,res) => {
-    function findUser (username) {
-        for (let i = 0; i < users.length; i++)
-        {
-            if (username === users[i].username)
-            {
-                return users[i];
-            }
-        }
-    }
     try {
         const {username, password} = req.body;
         const foundUser = findUser(username);
-        if (foundUser)
-        {
-            res.json("Username existed");
+        
+        if (foundUser) {
+            return res.json("Username existed");
         }
-        else
-        {
-            users.push({"username": username, "password": password});
-            res.json("User created");
-        }
+        
+        users.push({"username": username, "password": password});
+        return res.json("User created");
     }
     catch (error) {
-        res.status(500).json({ message: "Internal Server Error!!" });
+        return res.status(500).json({ message: "Internal Server Error!!" });
     }
 });
 
-// Get the book list available in the shop
-public_users.get('/',function (req, res) {
-    res.json(books);
+public_users.get('/', async (req, res) => {
+    return res.json(books);
 });
 
-// Get book details based on ISBN
-public_users.get('/isbn/:isbn',function (req, res) {
-    function filter(book_isbn) {
+public_users.get('/isbn/:isbn', async (req, res) => {
+    const filter = (book_isbn) => {
         let filtered_books = [];
         let keys = Object.keys(books);  
 
-        for (let i = 0; i < keys.length; i++)
-        {
+        for (let i = 0; i < keys.length; i++) {
             let id = keys[i];
-            if (books[id].isbn === book_isbn)
-            {
+            if (books[id].isbn === book_isbn) {
                 filtered_books.push(books[id]);
             }
         }
         return filtered_books;
-    }
+    };
 
-    filtered_books = filter(req.params.isbn);
-    res.json(filtered_books);
+    const filtered_books = filter(req.params.isbn);
+    return res.json(filtered_books);
 });
   
-// Get book details based on author
-public_users.get('/author/:author',function (req, res) {
-    function filter(author) {
+public_users.get('/author/:author', async (req, res) => {
+    const filter = (author) => {
         let filtered_books = [];
         let keys = Object.keys(books);  
 
-        for (let i = 0; i < keys.length; i++)
-        {
+        for (let i = 0; i < keys.length; i++) {
             let id = keys[i];
-            if (books[id].author === author)
-            {
+            if (books[id].author === author) {
                 filtered_books.push(books[id]);
             }
         }
         return filtered_books;
-    }
+    };
 
-    filtered_books = filter(req.params.author);
-    res.json(filtered_books);
+    const filtered_books = filter(req.params.author);
+    return res.json(filtered_books);
 });
 
-// Get all books based on title
-public_users.get('/title/:title',function (req, res) {
-    function filter(title) {
+public_users.get('/title/:title', async (req, res) => {
+    const filter = (title) => {
         let filtered_books = [];
         let keys = Object.keys(books);  
 
-        for (let i = 0; i < keys.length; i++)
-        {
+        for (let i = 0; i < keys.length; i++) {
             let id = keys[i];
-            if (books[id].title === title)
-            {
+            if (books[id].title === title) {
                 filtered_books.push(books[id]);
             }
         }
         return filtered_books;
-    }
+    };
 
-    filtered_books = filter(req.params.title);
-    res.json(filtered_books);
+    const filtered_books = filter(req.params.title);
+    return res.json(filtered_books);
 });
 
-//  Get book review
-public_users.get('/review/:isbn',function (req, res) {
-    function filter(isbn) {
+public_users.get('/review/:isbn', async (req, res) => {
+    const filter = (isbn) => {
         let reviews = [];
         let keys = Object.keys(books);  
 
-        for (let i = 0; i < keys.length; i++)
-        {
+        for (let i = 0; i < keys.length; i++) {
             let id = keys[i];
-            if (books[id].isbn === isbn)
-            {
+            if (books[id].isbn === isbn) {
                 reviews.push(books[id].reviews);
             }
         }
         return reviews;
-    }
+    };
 
-    reviews = filter(req.params.isbn);
-    res.json(reviews);
+    const reviews = filter(req.params.isbn);
+    return res.json(reviews);
 });
 
 module.exports.general = public_users;
